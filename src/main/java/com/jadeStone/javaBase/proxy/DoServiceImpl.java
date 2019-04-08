@@ -1,11 +1,6 @@
-package com.jadeStone.javaBase.proxy.dynamic;
+package com.jadeStone.javaBase.proxy;
 
 public class DoServiceImpl implements DoService{
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void doo() {
