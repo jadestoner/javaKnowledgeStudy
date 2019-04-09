@@ -6,4 +6,9 @@ public class DoServiceImpl implements DoService{
 	public void doo() {
 		System.out.println("i do");
 	}
+	
+	@Override
+	public void doo2() {
+		System.out.println("i doo2");
+	}
 }

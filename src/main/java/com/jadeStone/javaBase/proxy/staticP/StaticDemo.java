@@ -28,6 +28,14 @@ class ProxyImpl implements DoService{
 		doService.doo();
 		System.out.println("after doo");
 	}
+
+	@Override
+	public void doo2() {
+		System.out.println("before doo2");
+		doService.doo2();
+		System.out.println("after doo2");
+		
+	}
 }
 
 
