@@ -58,9 +58,10 @@ class ProxyImpl implements DoService{
 - 使用了组合，每个服务都需要一个与之配对的代理类。
 ## 动态代理
 -   运行时才生成相关的代理类；
--   相同接口的会缓存下来，避免重复生成代理类；
--   代理类拥有统一的父类Proxy，都会有一个成员变量InvocationHandler h；每次调用代理类的方法都会被转发到他的invoke(Object proxy, Method method, Object[] args)方法，利用反射实现方法的调用。
+-   相同接口的会缓存下来，避免重复生成代理类对象(Class对象)；
+-   代理类实例拥有统一的父类Proxy，都会有一个成员变量InvocationHandler h；每次调用代理类实例的方法都会被转发到h的invoke(Object proxy, Method method, Object[] args)方法，利用反射实现方法的调用。
 -   invoke方法的返回值需要注意一下，是接口定义的返回值类型(的子类)/或者拆装箱,类型不符合还会报错。
+-   
 -   基本使用方法：
 
 ```
@@ -71,7 +72,7 @@ Class proxyClass = Proxy.getProxyClass(doService.getClassLoader(),DoService.clas
 // 代理类实例化
 DoService f = (DoService)proxyClass.getConstructor(InvocationHandler.class).newInstance(handler);
 ```
-或者更简单粗错的，也是我们最常使用的（其实只是对上面方法的一个封装，直接返回实例对象）
+或者更简单粗错的，也是我们最常使用的（其实只是对上面方法的一个封装，反射调用了上面方法生成的Class对象的构造函数，传入了一个InvocationHandler对象）
 
 ```
 DoService f = (Foo) Proxy.newProxyInstance(doService.getClassLoader(),
@@ -79,6 +80,88 @@ DoService f = (Foo) Proxy.newProxyInstance(doService.getClassLoader(),
 ```
 
 ### 代码：
+
+<details>
+<summary>
+动态代理demo及一个RPC小例子的拓展：
+</summary>
+
+```
+public class DynamicDemo {
+
+	public static void main(String[] args) throws Exception {
+		DoService doo = new DoServiceImpl();
+		doo.doo();
+		doo = (DoService)new ProxyFactory(doo).getInstence();
+		doo.doo();
+		
+		// 网上看到一个有意思的用法（RPC代理），只代理接口，这里实现以下
+		// 场景：客户端只有一个DoService接口，调用doo方法时，反射时调用远程方法即可
+		doo = (DoService)new ProxyOnlyInterface(DoService.class).getInstence();
+		doo.doo();
+	}	
+}
+
+class ProxyFactory{
+	private Object o;
+	public ProxyFactory(Object o) throws Exception{
+		this.o = o;
+	}
+	
+	public Object getInstence(){
+		return java.lang.reflect.Proxy.newProxyInstance(
+				o.getClass().getClassLoader(), 
+				o.getClass().getInterfaces(), 
+				// 作为代理类的一个成员变量h，当有方法过来时，都会分发到h的invoke方法，可以参考文章中的代理类的反编译源码，一看便知。这里有一个小知识点，内部类可以访问外部对象的成员变量，所以h的invoke方法直接就利用反射调用了成员变量o的方法，实现动态代理。
+				new InvocationHandler(){
+
+					@Override
+					public Object invoke(Object proxy, Method method,
+							Object[] args) throws Throwable {
+						
+						System.out.println("pre");
+						Object a = method.invoke(o, args);
+						System.out.println("post");
+						return a;
+					}
+					
+				});
+	}
+}
+
+class ProxyOnlyInterface{
+	// 这是一个接口的class对象，如上文的DoService.class
+	private Class o;
+	public ProxyOnlyInterface(Class o) throws Exception{
+		this.o = o;
+	}
+	
+	public Object getInstence(){
+		return java.lang.reflect.Proxy.newProxyInstance(
+				o.getClassLoader(),
+				new Class[]{o},
+				new InvocationHandler(){
+					@Override
+					public Object invoke(Object proxy, Method method,
+							Object[] args) throws Throwable {
+						System.out.println("pre,代理的接口名称"+o.getName()+",接口方法"+method.getName());
+						// 这里就不能再使用method.invoke方法了，因为这里的o不是实例对象
+						// 使用场景是一个RPC的调用,这里将接口名，方法名，参数，版本，等信息拼装成一个对象，序列化后发送出去即可实现简单的RPC代理调用
+//						Object a = method.invoke(o, args);
+						Object result = "远程调用返回的结果";
+//						result = 远程调用返回的结果
+						System.out.println("post");
+						return result;
+					}
+					
+				});
+	}
+}
+
+```
+
+</details>
+
 ### 关键点：
 ### 反思：
 
