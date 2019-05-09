@@ -1,17 +1,21 @@
-package com.jadeStone.javaBase.AOP;
+package com.jadeStone.javaBase.AOP.Chapter1BaseIntroduction;
 
 import java.lang.reflect.Method;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.json.JSONObject;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.aop.MethodBeforeAdvice;
+import org.springframework.aop.Pointcut;
+import org.springframework.aop.PointcutAdvisor;
 import org.springframework.aop.ThrowsAdvice;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.aop.support.NameMatchMethodPointcutAdvisor;
 
+import com.alibaba.fastjson.JSON;
 import com.jadeStone.javaBase.proxy.DoService;
 import com.jadeStone.javaBase.proxy.DoServiceImpl;
 
@@ -30,6 +34,28 @@ public class AdviceInfo {
 		DoService doService = new DoServiceImpl();
 		// 设置代理对象
 		proxyFactory.setTarget(doService);
+		proxyFactory.setInterfaces(doService.getClass().getInterfaces());
+		proxyFactory.addAdvisor(new PointcutAdvisor() {
+			
+			@Override
+			public boolean isPerInstance() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public Advice getAdvice() {
+				// TODO Auto-generated method stub
+				return getMethodAfterAdvice();
+			}
+			
+			@Override
+			public Pointcut getPointcut() {
+				NameMatchMethodPointcut names = new NameMatchMethodPointcut();
+				names.setMappedName("doo2");
+				return names;
+			}
+		});
 		// 设置拦截器(增强器)
 		proxyFactory.addAdvice(new MethodInterceptor() {
 			@Override
@@ -51,26 +77,9 @@ public class AdviceInfo {
 		//    2. 拦截器 Interceptor 是 Advice的一个子类，MethodInterceptor 又是 Interceptor 的子类，这一类都是一般切面（将拦截所有的方法），不推荐使用
 		//    3. 推荐使用切点切面 PointcutAdvisor。可通过配置切点，准确的直达目标
 		//    4. 引介切面 IntroductionAdvisor
-		
-		/*
-		 * 先来一个简单的 
-		 */
-		proxyFactory = new ProxyFactory();
-		proxyFactory.setTarget(doService);
-		// 设置切点切面
-		proxyFactory.addAdvisor(new NameMatchMethodPointcutAdvisor(){
-			@Override
-			public NameMatchMethodPointcut addMethodName(String name) {
-				return super.addMethodName("doo2");
-			}
-		});
-		
-		doService = (DoService)proxyFactory.getProxy();
-		doService.doo();
-		doService.doo2();
 	}
 	
-	private Advice getMethodBeforeAdvice(){
+	private static Advice getMethodBeforeAdvice(){
 		return new MethodBeforeAdvice (){
 			@Override
 			public void before(Method method, Object[] args, Object target)
@@ -87,7 +96,7 @@ public class AdviceInfo {
 		};
 	}
 	
-	private Advice getMethodAfterAdvice(){
+	private static Advice getMethodAfterAdvice(){
 		// 后置通知，能看结果，即returnValue，但是不能改变它
 		return new AfterReturningAdvice (){
 			@Override

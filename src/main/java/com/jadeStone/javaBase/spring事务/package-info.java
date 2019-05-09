@@ -17,3 +17,10 @@ package com.jadeStone.javaBase.spring事务;
 //TxNamespaceHandler
 
 //ClassPathXmlApplicationContext
+
+
+//TransactionProxyFactoryBean
+//
+//DataSourceTransactionManager
+//
+//TransactionInterceptor

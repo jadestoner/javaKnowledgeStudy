@@ -36,6 +36,12 @@ class ProxyImpl implements DoService{
 		System.out.println("after doo2");
 		
 	}
+
+	@Override
+	public void insert1() {
+		// TODO Auto-generated method stub
+		
+	}
 }
 
 

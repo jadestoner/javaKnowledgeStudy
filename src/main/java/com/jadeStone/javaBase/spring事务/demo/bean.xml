@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 使用C3P0数据库连接池作为数据源 -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+           	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+           	http://www.springframework.org/schema/context
+           	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+           	http://www.springframework.org/schema/tx
+      		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+           	http://www.springframework.org/schema/aop
+           	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+			http://www.springframework.org/schema/jdbc
+			http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd" default-lazy-init="true">
+			
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+	    <property name="driverClass" value="com.mysql.jdbc.Driver" />
+	    <property name="jdbcUrl" value="jdbc:mysql://61.160.245.8:33030/portal_paki" />
+	    <property name="user" value="runsacrm" />
+	    <property name="password" value="iqAD$hNL1PA58J^8" />
+	    <property name="maxPoolSize" value="40" />
+	    <property name="minPoolSize" value="4" />
+	    <!-- 指定数据库连接池的连接的最大空闲时间 -->
+	    <property name="maxIdleTime" value="20" />
+	</bean>
+	
+	<!-- 配置JDBC数据源的局部事务管理器，使用DataSourceTransactionManager类，该类实现了
+	PlatformTransactionManager接口，是针对采用数据源连接的特定实现 -->
+	<bean id="transactionManager" 
+	    class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	    <!-- 配置TransactionManager时需要注入数据源引用 -->
+	    <property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 下面这个是前面定义的业务Bean -->
+	<bean id="demoService" class="com.jadeStone.javaBase.spring事务.demo.DemoServiceImpl">
+	    <!-- 为业务Bean注入属性 -->
+	    <property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	
+	<bean id="demoServiceProxy" 
+	    class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+	    <!-- 为事务代理工厂Bean注入事务管理器 -->
+	    <property name="transactionManager" ref="transactionManager" />
+	    <!-- 要在哪个Bean上面创建事务代理对象 -->
+	    <property name="target" ref="demoService" />
+	    <!-- 指定事务属性 -->
+	    <property name="transactionAttributes">
+	        <props>
+	            <prop key="*">PROPAGATION_REQUIRED</prop>
+	        </props>
+	    </property>
+	</bean>
+</beans>

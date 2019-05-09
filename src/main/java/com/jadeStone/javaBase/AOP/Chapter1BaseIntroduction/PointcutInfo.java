@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.jadeStone.javaBase.AOP;
+package com.jadeStone.javaBase.AOP.Chapter1BaseIntroduction;
 
 /**
  *  
